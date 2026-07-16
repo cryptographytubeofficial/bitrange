@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>BTC PUZZLE SCANNER — CUSTOM RANGE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060a14;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:6px}
+#app{width:100%;max-width:900px;background:#0d1424;border-radius:14px;overflow:hidden;box-shadow:0 0 60px rgba(249,115,22,.15),0 0 120px rgba(239,68,68,.08);border:1px solid #1a2744}
+.hdr{background:linear-gradient(135deg,#1a0a00,#091428);padding:12px 20px;text-align:center;border-bottom:2px solid #f97316;position:relative}
+.hdr::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#ef4444,transparent)}
+.hdr h1{color:#fff;font-size:20px;font-weight:900;letter-spacing:3px;text-transform:uppercase}
+.hdr h1 span{color:#f97316;text-shadow:0 0 25px rgba(249,115,22,.6)}
+.tag{color:#94a3b8;font-size:8px;margin-top:2px;letter-spacing:2px;font-weight:600}
+.hr{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:5px}
+.lbd{display:inline-block;background:#475569;color:#fff;font-size:9px;font-weight:700;padding:3px 10px;border-radius:10px;letter-spacing:1px;transition:all .3s}
+.lbd.live{background:#ef4444;animation:lp 1.5s ease-in-out infinite}
+.lbd.ready{background:#22c55e;animation:none}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.4}}
+.cd{display:inline-block;width:10px;height:10px;border-radius:50%;background:#475569;box-shadow:0 0 8px #475569;transition:all .3s}
+.cd.on{background:#22c55e;box-shadow:0 0 8px #22c55e}
+.cl{color:#64748b;font-size:10px;font-weight:600}
+
+/* Range Input Section */
+.range-box{background:linear-gradient(135deg,#1a0a00,#0f1525);margin:6px 12px;padding:10px 14px;border-radius:8px;border:1px solid #f9731633;text-align:center}
+.range-box .rl{color:#64748b;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:2px}
+.rinput-wrap{margin:6px 0;text-align:left}
+.rinput-wrap label{display:block;color:#94a3b8;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.rinput{background:#0a0f1a;border:1px solid #1e293b;border-radius:6px;padding:9px 12px;color:#e2e8f0;font-family:'Courier New',monospace;font-size:13px;width:100%;outline:none;transition:border-color .2s;letter-spacing:1px}
+.rinput:focus{border-color:#f97316;box-shadow:0 0 10px rgba(249,115,22,.15)}
+.rinput::placeholder{color:#334155;font-size:11px}
+.start-btn{background:linear-gradient(135deg,#f97316,#ef4444);color:#fff;border:none;padding:11px 0;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;width:100%;margin-top:8px;letter-spacing:3px;text-transform:uppercase;transition:opacity .2s,transform .1s}
+.start-btn:hover{opacity:.9;transform:scale(1.01)}
+.start-btn:active{transform:scale(.99)}
+.start-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.stop-btn{background:linear-gradient(135deg,#ef4444,#991b1b);color:#fff;border:none;padding:8px 24px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;letter-spacing:2px;margin-top:6px;text-transform:uppercase}
+.stop-btn:hover{opacity:.9}
+.rrt{color:#475569;font-size:7px;margin-top:6px;font-weight:600;letter-spacing:1px}
+.err-msg{color:#ef4444;font-size:10px;font-weight:700;margin-top:6px;min-height:16px}
+
+/* Active Range Display */
+.range-box .rv{color:#f97316;font-size:13px;font-weight:900;font-family:'Courier New',monospace;margin-top:4px;letter-spacing:2px;word-break:break-all}
+.range-box .ri{color:#475569;font-size:8px;margin-top:2px;font-weight:600}
+
+/* Stats */
+.sec{padding:4px 12px}
+.sr{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.sb{background:#091428;border-radius:8px;padding:4px 2px;text-align:center;border:1px solid #1a2744}
+.sl{color:#64748b;font-size:6px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.sl.o{color:#f97316}.sl.g{color:#22c55e}.sl.c{color:#22d3ee}.sl.y{color:#eab308}.sl.r{color:#ef4444}.sl.p{color:#a78bfa}.sl.m{color:#f472b6}
+.sv{color:#e2e8f0;font-size:13px;font-weight:800;margin-top:1px;font-variant-numeric:tabular-nums}
+
+/* Live Scanner Log */
+.la{margin:0 8px;border-radius:10px;overflow:hidden;border:1px solid #1a2744}
+.lh{background:#091428;padding:4px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1a2744}
+.lh span{color:#64748b;font-size:9px;font-weight:700;display:flex;align-items:center;gap:6px}
+.ad{display:inline-block;width:8px;height:8px;border-radius:50%;background:#475569;transition:background .3s}
+.ad.on{background:#22c55e;box-shadow:0 0 8px #22c55e}
+.lc2{background:none;border:1px solid #1e293b;color:#64748b;font-size:8px;padding:2px 8px;border-radius:4px;cursor:pointer}
+#lo{height:360px;overflow-y:auto;padding:4px 6px;background:#080c18;font-family:'Courier New',monospace;font-size:9px;line-height:1.4;color:#94a3b8;-webkit-overflow-scrolling:touch}
+#lo::-webkit-scrollbar{width:3px}#lo::-webkit-scrollbar-track{background:#080c18}#lo::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
+.wb{margin:2px 0;padding:3px 5px;background:linear-gradient(135deg,#0b1225,#091020);border:1px solid #1a2744;border-radius:5px;border-left:3px solid #22c55e}
+.wp{color:#e2e8f0;font-size:8px;word-break:break-all;font-weight:600}
+.wc{margin-top:1px}
+.wa{color:#22c55e;font-size:8px;font-weight:600}
+.wua{color:#eab308;font-size:8px;font-weight:600}
+.wr{color:#64748b;font-size:8px;display:inline}
+.wb2{color:#22c55e;font-weight:700;font-size:8px}
+
+/* Found Dashboard */
+.ds{padding:0 8px 8px}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-top:1px solid #1a2744;margin-top:2px}
+.dt{color:#f97316;font-size:11px;font-weight:800;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+.dc{background:#f97316;color:#060a14;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px}
+.dl{background:#1e3a5f;color:#60a5fa;border:1px solid #2563eb;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer}
+.dl:hover{background:#2563eb;color:#fff}
+.de{color:#475569;font-size:10px;text-align:center;padding:16px;font-style:italic}
+.dl2{max-height:300px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.dl2::-webkit-scrollbar{width:3px}.dl2::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
+.fc{background:linear-gradient(135deg,#0f1d35,#091428);border:1px solid #f97316;border-radius:8px;padding:8px 10px;margin-bottom:5px}
+.fr{display:flex;gap:5px;align-items:center;margin-bottom:3px;font-size:10px;flex-wrap:wrap}
+.fr:last-child{margin-bottom:0}
+.fi{color:#f97316;font-weight:800;min-width:28px}.fx{color:#60a5fa;font-weight:700}
+.ft{color:#eab308;font-weight:700;font-size:9px}
+.fn{color:#64748b;font-weight:600;min-width:80px;font-size:9px}.fv{color:#e2e8f0;word-break:break-all;font-size:9px;font-family:'Courier New',monospace}
+.frs{color:#60a5fa;font-weight:700;font-size:9px;font-family:'Courier New',monospace}
+.fb-r{color:#22c55e;font-weight:800;font-size:10px;min-width:30px;text-align:right}
+.fb-s{color:#ef4444;font-weight:800;font-size:10px;min-width:30px;text-align:right}
+.fb-b{color:#eab308;font-weight:900;font-size:11px;min-width:50px;text-align:right;text-shadow:0 0 8px rgba(234,179,8,.4)}
+
+/* Footer */
+.sp{padding:4px 12px;background:#091428;border-top:1px solid #111827;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px}
+.sp .sl{color:#64748b;font-size:8px;font-weight:600}
+.sp .sv{color:#f97316;font-weight:800;font-size:12px}
+.vc{padding:4px 12px;background:#080c18;border-top:1px solid #111827;display:flex;justify-content:center;align-items:center;gap:8px}
+.vc .vl{color:#475569;font-size:9px;font-weight:600}
+.vc .vv{color:#22d3ee;font-weight:900;font-size:13px;letter-spacing:2px;font-variant-numeric:tabular-nums}
+.ft2{background:linear-gradient(135deg,#1a0a00,#091428);padding:8px 20px;text-align:center;border-top:2px solid #f97316;position:relative}
+.ft2::before{content:'';position:absolute;top:-2px;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#ef4444,transparent)}
+.ft2 .fl{color:#64748b;font-size:7px;letter-spacing:3px;text-transform:uppercase}
+.ft2 .fv{color:#f97316;font-size:12px;font-weight:900;letter-spacing:3px;margin-top:2px}
+.batch-badge{display:inline-block;background:#a78bfa22;color:#a78bfa;font-size:7px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #a78bfa44;letter-spacing:1px}
+.batch-badge.prox{background:#ef444422;color:#ef4444;border-color:#ef444444}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <h1>BTC PUZZLE <span>SCANNER</span></h1>
+    <div class="tag">CUSTOM RANGE | 1 TO 256 BITS | RANDOM MODE | NO REPEAT | <span id="apiC">2</span> REAL APIs</div>
+    <div class="hr"><span class="lbd ready" id="liveB">READY</span><span class="cd" id="cD"></span><span class="cl" id="cT">Connecting...</span></div>
+  </div>
+
+  <!-- INPUT SECTION (visible before scan starts) -->
+  <div id="inputSection">
+    <div class="range-box">
+      <div class="rl">SET YOUR RANGE</div>
+      <div class="rinput-wrap">
+        <label>START HEX</label>
+        <input class="rinput" id="startHex" type="text" placeholder="e.g. 1 or 400000000000000000" maxlength="64" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="rinput-wrap">
+        <label>END HEX</label>
+        <input class="rinput" id="endHex" type="text" placeholder="e.g. 3fffff or 7fffffffffffffffff" maxlength="64" spellcheck="false" autocomplete="off">
+      </div>
+      <button class="start-btn" id="startBtn" onclick="doStart()">&#9654; START SCAN</button>
+      <div class="err-msg" id="errMsg"></div>
+      <div class="rrt">Enter hex values (1 to 64 characters) | Max: 2^256 | Random Mode | Zero Repeat</div>
+    </div>
+  </div>
+
+  <!-- ACTIVE RANGE (visible during scan) -->
+  <div id="activeRange" style="display:none">
+    <div class="range-box">
+      <div class="rl">ACTIVE RANGE</div>
+      <div class="rv" id="rangeDisp">—</div>
+      <div class="ri" id="rangeInfo">—</div>
+      <button class="stop-btn" onclick="doStop()">&#9632; STOP SCAN</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sr">
+      <div class="sb"><div class="sl o">Keys</div><div class="sv" id="sK">0</div></div>
+      <div class="sb"><div class="sl c">Addrs</div><div class="sv" id="sA">0</div></div>
+      <div class="sb"><div class="sl g">Found</div><div class="sv" id="sF">0</div></div>
+      <div class="sb"><div class="sl y">API</div><div class="sv" id="sP">0</div></div>
+      <div class="sb"><div class="sl r">Spd/s</div><div class="sv" id="sS">0</div></div>
+      <div class="sb"><div class="sl p">Proxies</div><div class="sv" id="sPr">0</div></div>
+      <div class="sb"><div class="sl m">Mode</div><div class="sv" id="sMd" style="font-size:9px;color:#22c55e">READY</div></div>
+    </div>
+  </div>
+
+  <div class="la">
+    <div class="lh">
+      <span><span class="ad" id="aD"></span> Live Scanner (3 Workers) <span class="batch-badge" id="modeB">WAIT</span></span>
+      <button class="lc2" onclick="document.getElementById('lo').innerHTML=''">Clear</button>
+    </div>
+    <div id="lo"></div>
+  </div>
+
+  <div class="ds">
+    <div class="dh">
+      <div class="dt">&#9733; FOUND DASHBOARD <span class="dc" id="dC">0</span></div>
+      <button class="dl" onclick="dlF()">&#11015; Download TXT</button>
+    </div>
+    <div id="dE" class="de">No wallets with balance found yet...</div>
+    <div id="dL" class="dl2"></div>
+  </div>
+
+  <div class="sp">
+    <span class="sl">Speed: <span class="sv" id="spV">0</span> keys/sec</span>
+    <span class="sl">Workers: <span class="sv">3</span> | 4 Addr/Batch | 3s Timeout</span>
+  </div>
+  <div class="vc">
+    <span class="vl">D = <span class="vv" id="vC">0</span></span>
+  </div>
+  <div class="ft2">
+    <div class="fl">Programmer &amp; Owner</div>
+    <div class="fv">CRYPTOGRAPHYTUBE.IN</div>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script>
+var SERVER_URL='https://seven1puzzle.onrender.com';
+var fd=[];
+var isScanning=false;
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fb(v){return(v||0).toFixed(8)}
+
+function addWallet(d){
+    var el=document.getElementById('lo'),div=document.createElement('div');div.className='wb';
+    var comp=d.comp||{},uncomp=d.uncomp||{};
+    var h='<div class="wp">PRIV: '+d.privkey_hex+'</div><div class="wc">';
+    h+='<span class="wa">C:</span>'+esc(d.comp_addr)+' ';
+    h+='<span class="wr">R:'+fb(comp.received)+' S:'+fb(comp.sent)+' B:<span class="wb2">'+fb(comp.balance)+'</span></span>';
+    h+=' | <span class="wua">U:</span>'+esc(d.uncomp_addr)+' ';
+    h+='<span class="wr">R:'+fb(uncomp.received)+' S:'+fb(uncomp.sent)+' B:<span class="wb2">'+fb(uncomp.balance)+'</span></span>';
+    h+='</div>';div.innerHTML=h;el.appendChild(div);el.scrollTop=el.scrollHeight;
+    while(el.children.length>200)el.removeChild(el.firstChild);
+}
+
+function uS(k,a,f,api,sp){
+    document.getElementById('sK').textContent=(k||0).toLocaleString();
+    document.getElementById('sA').textContent=(a||0).toLocaleString();
+    document.getElementById('sF').textContent=(f||0).toLocaleString();
+    document.getElementById('sP').textContent=(api||0).toLocaleString();
+    document.getElementById('sS').textContent=(sp||0).toLocaleString();
+}
+
+function showScanningUI(){
+    document.getElementById('inputSection').style.display='none';
+    document.getElementById('activeRange').style.display='block';
+    document.getElementById('liveB').textContent='LIVE';
+    document.getElementById('liveB').className='lbd live';
+    document.getElementById('modeB').textContent='RANDOM';
+    document.getElementById('modeB').className='batch-badge';
+    document.getElementById('sMd').textContent='SCAN';
+    document.getElementById('sMd').style.color='#22c55e';
+    document.getElementById('aD').className='ad on';
+    isScanning=true;
+}
+
+function showInputUI(){
+    document.getElementById('inputSection').style.display='block';
+    document.getElementById('activeRange').style.display='none';
+    document.getElementById('liveB').textContent='READY';
+    document.getElementById('liveB').className='lbd ready';
+    document.getElementById('modeB').textContent='WAIT';
+    document.getElementById('modeB').className='batch-badge';
+    document.getElementById('sMd').textContent='READY';
+    document.getElementById('sMd').style.color='#22c55e';
+    document.getElementById('aD').className='ad';
+    isScanning=false;
+}
+
+function doStart(){
+    var s=document.getElementById('startHex').value.trim();
+    var e=document.getElementById('endHex').value.trim();
+    document.getElementById('errMsg').textContent='';
+    if(!s||!e){document.getElementById('errMsg').textContent='Start and End hex required';return;}
+    document.getElementById('startBtn').disabled=true;
+    document.getElementById('startBtn').textContent='STARTING...';
+    socket.emit('startScan',{start:s,end:e});
+}
+
+function doStop(){
+    socket.emit('stopScan',{});
+}
+
+var socket=io(SERVER_URL,{transports:['websocket','polling'],reconnection:true,reconnectionAttempts:Infinity,reconnectionDelay:2000,timeout:20000});
+socket.on('connect',function(){document.getElementById('cD').className='cd on';document.getElementById('cT').textContent='Connected';});
+socket.on('disconnect',function(){document.getElementById('cD').className='cd';document.getElementById('cT').textContent='Reconnecting...';document.getElementById('aD').className='ad';});
+
+socket.on('init',function(d){
+    uS(d.checkCount||0,d.addrChecked||0,d.foundCount||0,d.apiCallCount||0,d.speed||0);
+    if(d.totalApis)document.getElementById('apiC').textContent=d.totalApis+' APIs';
+    if(d.proxyCount)document.getElementById('sPr').textContent=d.proxyCount.toLocaleString();
+    if(d.viewers)document.getElementById('vC').textContent=d.viewers;
+    if(d.foundData&&d.foundData.length)d.foundData.forEach(function(f){aFC(f)});
+    // Restore scan state
+    if(d.scanRunning&&d.rangeSet){
+        document.getElementById('rangeDisp').textContent=d.rangeDisplay;
+        document.getElementById('rangeInfo').textContent='Random Mode | '+d.totalKeys+' keys | '+d.rangeBits+'-bit range';
+        showScanningUI();
+    } else {
+        showInputUI();
+        if(d.rangeSet){
+            document.getElementById('startHex').value=d.startHex;
+            document.getElementById('endHex').value=d.endHex;
+        }
+    }
+});
+
+socket.on('scanError',function(d){
+    document.getElementById('errMsg').textContent=d.msg;
+    document.getElementById('startBtn').disabled=false;
+    document.getElementById('startBtn').innerHTML='&#9654; START SCAN';
+});
+
+socket.on('scanStarted',function(d){
+    document.getElementById('rangeDisp').textContent=d.rangeDisplay;
+    document.getElementById('rangeInfo').textContent='Random Mode | '+d.totalKeys+' keys | '+d.rangeBits+'-bit range';
+    showScanningUI();
+    document.getElementById('startBtn').disabled=false;
+    document.getElementById('startBtn').innerHTML='&#9654; START SCAN';
+});
+
+socket.on('scanStopped',function(){
+    showInputUI();
+});
+
+socket.on('wallet',function(d){
+    addWallet(d);
+    uS(d.checkCount||0,d.addrChecked||0,d.foundCount||0,d.apiCallCount||0,0);
+});
+
+socket.on('speed',function(d){
+    document.getElementById('spV').textContent=(d.speed||0).toLocaleString();
+    uS(d.checkCount||0,d.addrChecked||0,d.foundCount||0,d.apiCallCount||0,d.speed||0);
+    if(d.proxyCount)document.getElementById('sPr').textContent=d.proxyCount.toLocaleString();
+    if(d.viewers)document.getElementById('vC').textContent=d.viewers;
+    if(d.proxyHits>0){
+        document.getElementById('modeB').textContent='PROXY';
+        document.getElementById('modeB').className='batch-badge prox';
+        document.getElementById('sMd').textContent='PRX';
+        document.getElementById('sMd').style.color='#a78bfa';
+    }
+});
+
+socket.on('found',function(f){
+    aFC(f);
+    var el=document.getElementById('lo'),div=document.createElement('div');
+    div.style.cssText='color:#eab308;font-size:12px;font-weight:900;text-align:center;padding:6px 0;animation:lp 0.5s ease-in-out 3';
+    div.textContent='*** FOUND #'+f.idx+'! BTC '+f.addrType+' R:'+fb(f.received)+' S:'+fb(f.sent)+' B:'+fb(f.balance)+' ***';
+    el.appendChild(div);el.scrollTop=el.scrollHeight;
+});
+
+socket.on('log',function(d){var el=document.getElementById('lo'),div=document.createElement('div');div.style.cssText='margin:2px 0;padding:1px 0';div.innerHTML=d.msg;el.appendChild(div);el.scrollTop=el.scrollHeight;});
+
+function aFC(f){
+    for(var i=0;i<fd.length;i++){
+        if(fd[i].privkey_hex===f.privkey_hex&&fd[i].addrType===f.addrType)return;
+    }
+    fd.push(f);document.getElementById('dE').style.display='none';
+    var c=document.createElement('div');c.className='fc';
+    var h='<div class="fr"><span class="fi">#'+f.idx+'</span><span class="fx">BTC</span>';
+    if(f.addrType)h+='<span class="ft">['+f.addrType+']</span></div>';
+    h+='<div class="fr"><span class="fn">PRIV KEY</span><span class="fv">'+f.privkey_hex+'</span></div>';
+    h+='<div class="fr"><span class="fn">COMP ADDR</span><span class="fv">'+esc(f.comp_addr)+'</span></div>';
+    if(f.uncomp_addr)h+='<div class="fr"><span class="fn">UNCOMP ADDR</span><span class="fv">'+esc(f.uncomp_addr)+'</span></div>';
+    h+='<div class="fr"><span class="fn">Received (R)</span><span class="fb-r">'+fb(f.received)+' BTC</span></div>';
+    h+='<div class="fr"><span class="fn">Sent (S)</span><span class="fb-s">'+fb(f.sent)+' BTC</span></div>';
+    h+='<div class="fr" style="background:#0a0f1a;border-radius:5px;padding:4px 6px;margin-top:2px"><span class="fn" style="color:#eab308;font-weight:900">Balance (B)</span><span class="fb-b">'+fb(f.balance)+' BTC</span></div>';
+    c.innerHTML=h;document.getElementById('dL').prepend(c);document.getElementById('dC').textContent=fd.length;
+    c.style.boxShadow='0 0 25px rgba(249,115,22,0.7)';setTimeout(function(){c.style.boxShadow='none'},3000);
+}
+
+function dlF(){
+    if(!fd.length)return;
+    var t='=== BTC PUZZLE SCANNER - FOUND ===\nDate: '+new Date().toISOString()+'\nTotal: '+fd.length+'\nOwner: CRYPTOGRAPHYTUBE.IN\n'+'='.repeat(60)+'\n\n';
+    fd.forEach(function(f){
+        t+='FOUND #'+f.idx+'\n';
+        t+='PRIV KEY: '+f.privkey_hex+'\n';
+        t+='TYPE: '+(f.addrType||'COMP')+'\n';
+        t+='COMP ADDR: '+f.comp_addr+'\n';
+        if(f.uncomp_addr)t+='UNCOMP ADDR: '+f.uncomp_addr+'\n';
+        t+='Received: '+fb(f.received)+' BTC\n';
+        t+='Sent: '+fb(f.sent)+' BTC\n';
+        t+='Balance: '+fb(f.balance)+' BTC\n';
+        t+='Date: '+(f.date||new Date().toISOString())+'\n';
+        t+='='.repeat(60)+'\n\n';
+    });
+    var b=new Blob([t],{type:'text/plain'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='BTC_Puzzle_Found.txt';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
+}
+</script>
+</body>
+</html>
